@@ -6,3 +6,4 @@ torchaudio
 pandas
 numpy
 scipy
+urlextract

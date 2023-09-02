@@ -2,15 +2,24 @@ from googleapiclient.discovery import build
 import credentials
 import csv
 import os
+import re
+from urlextract import URLExtract
 
 #global variables
 comment_list = []
 video_id_list = []
 query = 'golfing lessons'
-
+url_text = 'Try this product https://www.pythonforbeginners.com/basics/python-literals' 
 # Connect to the YouTube API
 youtube = build('youtube', 'v3', developerKey=credentials.capstone_API_Key)
 
+def data_cleaning(text):
+    extractor = URLExtract()
+    text = extractor.find_urls(text)
+    # I need to find the url and then delete if from the comment.
+    print('HERE IS ONE', text)
+
+data_cleaning(url_text)
 #Function to perform a search and retrieve top 5 - 10 video Ids returned.
 def get_video_results(youtube):
     print('getting video search results')
@@ -24,7 +33,7 @@ def get_video_results(youtube):
     )
     response = search_response.execute()
 
-    # Extract the videoId from the return object.
+    # Extract the videoId from the returned object.
     for item in response['items']:
         video_id = item['id']['videoId']
         # print(video_id)
@@ -65,6 +74,8 @@ def generate_csv():
         for comment in comment_list:
             text = comment
             thewriter.writerow(text)
+
+# I might need to manually deal with encoding issues
 
 # Function to deal with overwriting csv files
 def check_comment_csv():

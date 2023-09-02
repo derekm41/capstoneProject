@@ -1,5 +1,7 @@
 from googleapiclient.discovery import build
 import credentials
+import csv
+import os
 
 #global variables
 comment_list = []
@@ -55,10 +57,28 @@ def get_comments_per_vid_id(vidIdsList):
         get_video_comments(youtube, vid_id)
 
 
+#Function to create a csv file with the retrieved text data.
+def generate_csv():
+    with open('comments.csv', 'w', newline='', encoding='utf-8-sig') as csvfile:
+        thewriter = csv.writer(csvfile)
+
+        for comment in comment_list:
+            text = comment
+            thewriter.writerow(text)
+
+# Function to deal with overwriting csv files
+def check_comment_csv():
+    file_path = 'D:\capstoneProject\comments.csv'
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+
 # To test that the comments were retrieved per Id.
 get_comments_per_vid_id(get_video_results(youtube))
 for item in comment_list:
     print(item)
+
+check_comment_csv()
+generate_csv()
 
 # To test that the video id were retrieved. 
 # get_video_results(youtube)

@@ -4,7 +4,7 @@ import credentials
 #global variables
 comment_list = []
 video_id_list = []
-query = 'Something to search'
+query = 'golfing lessons'
 
 # Connect to the YouTube API
 youtube = build('youtube', 'v3', developerKey=credentials.capstone_API_Key)

@@ -7,3 +7,5 @@ pandas
 numpy
 scipy
 urlextract
+demoji
+beautifulsoup4

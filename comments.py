@@ -2,24 +2,32 @@ from googleapiclient.discovery import build
 import credentials
 import csv
 import os
-import re
 from urlextract import URLExtract
+import html
+from bs4 import BeautifulSoup
+import demoji
 
 #global variables
 comment_list = []
 video_id_list = []
-query = 'golfing lessons'
-url_text = 'Try this product https://www.pythonforbeginners.com/basics/python-literals' 
+query = 'crypto'
 # Connect to the YouTube API
 youtube = build('youtube', 'v3', developerKey=credentials.capstone_API_Key)
 
 def data_cleaning(text):
+#using BeautifulSoup to remove html elements ie <a href>
+    soup = BeautifulSoup(text, "html.parser")
+    text = soup.get_text()
+#using URLExtract() to remove urls
     extractor = URLExtract()
-    text = extractor.find_urls(text)
-    # I need to find the url and then delete if from the comment.
-    print('HERE IS ONE', text)
+    urls = list(set(extractor.find_urls(text)))
+    for url in urls:
+        text = text.replace(url, '')
+#using demoji to remove emojis.
+    text = demoji.replace(text, '')
+    # print('text', text)
+    return text
 
-data_cleaning(url_text)
 #Function to perform a search and retrieve top 5 - 10 video Ids returned.
 def get_video_results(youtube):
     print('getting video search results')
@@ -29,7 +37,7 @@ def get_video_results(youtube):
         q=query,
         type='video',
         part='id',
-        maxResults=5
+        maxResults=10
     )
     response = search_response.execute()
 
@@ -48,7 +56,7 @@ def get_video_comments(youtube, vidId, token=''):
     request = youtube.commentThreads().list(
         part='snippet',
         videoId=vidId,
-        maxResults=5,
+        maxResults=100,
         pageToken=token
     )
     response = request.execute()
@@ -56,6 +64,10 @@ def get_video_comments(youtube, vidId, token=''):
     for item in response['items']:
         # Tauthor = item['snippet']['topLevelComment']['snippet']['authorDisplayName']
         Ttext = item['snippet']['topLevelComment']['snippet']['textDisplay']
+        #html encoding
+        Ttext = html.unescape(Ttext)
+        #data cleaning
+        Ttext = data_cleaning(Ttext)
         # What information from the comment do I need in the list. Possibly just the text.
         #Maybe it makes sense to store the comment in a dictionary so we can search for comment per video id.
         comment_list.append([Ttext])
@@ -83,11 +95,8 @@ def check_comment_csv():
     if os.path.isfile(file_path):
         os.remove(file_path)
 
-# To test that the comments were retrieved per Id.
+# Call the functions
 get_comments_per_vid_id(get_video_results(youtube))
-for item in comment_list:
-    print(item)
-
 check_comment_csv()
 generate_csv()
 

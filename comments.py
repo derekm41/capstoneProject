@@ -37,7 +37,7 @@ def get_video_results(youtube):
         q=query,
         type='video',
         part='id',
-        maxResults=10
+        maxResults=3
     )
     response = search_response.execute()
 
@@ -56,7 +56,7 @@ def get_video_comments(youtube, vidId, token=''):
     request = youtube.commentThreads().list(
         part='snippet',
         videoId=vidId,
-        maxResults=100,
+        maxResults=10,
         pageToken=token
     )
     response = request.execute()

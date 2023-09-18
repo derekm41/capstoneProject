@@ -1,4 +1,5 @@
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 import credentials
 import csv
 import os
@@ -29,6 +30,8 @@ def data_cleaning(text):
     return text
 
 #Function to perform a search and retrieve top 5 - 10 video Ids returned.
+
+#   I NEED TO MAKE SURE I'M CAPTURING ALL COMMENTS FOR ACURATE DATA
 def get_video_ids(youtube):
     print('getting video search results')
 
@@ -37,7 +40,7 @@ def get_video_ids(youtube):
         q=query,
         type='video',
         part='id',
-        maxResults=3
+        maxResults=50
     )
     response = search_response.execute()
 
@@ -53,26 +56,33 @@ def get_video_ids(youtube):
 def get_video_comments(youtube, vidId, token=''):
     print('Getting comments for videoId', vidId)
 
-    request = youtube.commentThreads().list(
-        part='snippet',
-        videoId=vidId,
-        maxResults=10,
-        pageToken=token
-    )
-    response = request.execute()
+    try:
+        request = youtube.commentThreads().list(
+            part='snippet',
+            videoId=vidId,
+            maxResults=100,
+            pageToken=token
+        )
+        response = request.execute()
 
-    for item in response['items']:
-        # Tauthor = item['snippet']['topLevelComment']['snippet']['authorDisplayName']
-        Ttext = item['snippet']['topLevelComment']['snippet']['textDisplay']
-        #html encoding
-        Ttext = html.unescape(Ttext)
-        print('Ttext: ', Ttext)
-        #data cleaning
-        Ttext = data_cleaning(Ttext)
-        # What information from the comment do I need in the list. Possibly just the text.
-        #Maybe it makes sense to store the comment in a dictionary so we can search for comment per video id.
-        comment_list.append([Ttext])
+        for item in response['items']:
+            # Tauthor = item['snippet']['topLevelComment']['snippet']['authorDisplayName']
+            Ttext = item['snippet']['topLevelComment']['snippet']['textDisplay']
+            #html encoding
+            Ttext = html.unescape(Ttext)
+            #data cleaning
+            Ttext = data_cleaning(Ttext)
+            # What information from the comment do I need in the list. Possibly just the text.
+            #Maybe it makes sense to store the comment in a dictionary so we can search for comment per video id.
+            comment_list.append([Ttext])
 
+
+    except HttpError as e:
+        error_response = e.content.decode('utf-8')
+        error_message = e._get_reason()
+        if "commentsDisabled" in error_response:
+            print('Comments are disabled for this video.')
+    
 #Function to retrieve comments for each video id provided.
 def get_comments_per_vid_id(vidIdsList):
     for vid_id in vidIdsList:

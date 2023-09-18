@@ -9,3 +9,4 @@ scipy
 urlextract
 demoji
 beautifulsoup4
+matplotlib

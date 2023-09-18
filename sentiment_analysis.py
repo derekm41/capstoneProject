@@ -5,6 +5,7 @@ from transformers import AutoTokenizer
 from transformers import AutoModelForSequenceClassification
 from scipy.special import softmax
 import csv
+import codecs
 
 # This is a simple example to make sure we are integrating 
 # Huggingface roberta into our program correctly
@@ -18,7 +19,8 @@ csv_file_path = 'comments.csv'
 
 def perform_analysis():
     counter = 0
-    with open('comments.csv', 'r', errors='replace', newline='') as csv_file:
+    #I am using encoding='utf-8-sig' to fix encoding and BOM issues.
+    with open('comments.csv', 'r', encoding='utf-8-sig', errors='replace', newline='') as csv_file:
         csv_reader = csv.reader(csv_file)
         for row in csv_reader:
             counter = counter + 1

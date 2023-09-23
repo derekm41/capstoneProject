@@ -11,7 +11,7 @@ import demoji
 #global variables
 comment_list = []
 video_id_list = []
-query = 'crypto'
+#query = 'crypto'
 # Connect to the YouTube API
 youtube = build('youtube', 'v3', developerKey=credentials.capstone_API_Key)
 
@@ -31,16 +31,17 @@ def data_cleaning(text):
 
 #Function to perform a search and retrieve top 5 - 10 video Ids returned.
 
-#   I NEED TO MAKE SURE I'M CAPTURING ALL COMMENTS FOR ACURATE DATA
-def get_video_ids(youtube):
+#   I NEED TO MAKE SURE I'M CAPTURING ALL COMMENTS FOR ACCURATE DATA
+def get_video_ids(youtube, query):
     print('getting video search results')
+    print(query)
 
     #Use YouTube .search() to search for top 5 videos returned, given a specific query (q)
     search_response = youtube.search().list(
         q=query,
         type='video',
         part='id',
-        maxResults=50
+        maxResults=3
     )
     response = search_response.execute()
 
@@ -49,6 +50,7 @@ def get_video_ids(youtube):
         video_id = item['id']['videoId']
         # print(video_id)
         video_id_list.append(video_id)
+    print(video_id_list)
 
     return video_id_list
 
@@ -60,7 +62,7 @@ def get_video_comments(youtube, vidId, token=''):
         request = youtube.commentThreads().list(
             part='snippet',
             videoId=vidId,
-            maxResults=100,
+            maxResults=3,
             pageToken=token
         )
         response = request.execute()
@@ -91,6 +93,11 @@ def get_comments_per_vid_id(vidIdsList):
 
 #Function to create a csv file with the retrieved text data.
 def generate_csv():
+    print('Generating new csv file')
+    file_path = 'D:\capstoneProject\comments.csv'
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+
     with open('comments.csv', 'w', newline='', encoding='utf-8-sig') as csvfile:
         thewriter = csv.writer(csvfile)
 
@@ -98,30 +105,11 @@ def generate_csv():
             text = comment
             thewriter.writerow(text)
 
-# I might need to manually deal with encoding issues
-
-# Function to deal with overwriting csv files
-def check_comment_csv():
-    file_path = 'D:\capstoneProject\comments.csv'
-    if os.path.isfile(file_path):
-        os.remove(file_path)
 
 # Call the functions
-get_comments_per_vid_id(get_video_ids(youtube))
-check_comment_csv()
-generate_csv()
+# get_comments_per_vid_id(get_video_ids(youtube))
+# check_comment_csv()
+# generate_csv()
 
-# To test that the video id were retrieved. 
-# get_video_results(youtube)
-# for item in top_video_id_list:
-#     print(item)
-
-# To test that comments were retrieved
-# get_video_comments(youtube, vid_id)
-# for item in comment_list:
-#     print(item)
-
-#Function for cleaning the text for analyzing
-#Function for exporting
 
     

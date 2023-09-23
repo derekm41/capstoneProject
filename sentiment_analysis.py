@@ -27,6 +27,8 @@ def perform_analysis():
             counter = counter + 1
             results.append(polarity_scores_roberta(row))
             # print(f'row {counter}: ', row)
+    
+    print('perform_analysis finished')
 
 def polarity_scores_roberta(example):
 
@@ -40,46 +42,44 @@ def polarity_scores_roberta(example):
         'roberta_nue' : scores[1],
         'roberta_pos' : scores[2]
     }
+    print('polarity done')
     return scores_dict
 
 # print(polarity_scores_roberta(example))
 # results_df = pd.DataFrame(results)
 def create_average():
-    data = []
-    #Extract the data and calculate averages for negative, neutral, positive
-    negative = [item['roberta_neg'] for item in results]
-    total_neg = sum(negative)
-    average_neg = (total_neg/ len(negative)) * 100
-    neg_dict = {'Category': 'Negative', 'Value': average_neg}
-    data.append(neg_dict)
+    try:
+        data = []
+        #Extract the data and calculate averages for negative, neutral, positive
+        negative = [item['roberta_neg'] for item in results]
+        total_neg = sum(negative)
+        average_neg = (total_neg/ len(negative)) * 100
+        neg_dict = {'Category': 'Negative', 'Value': average_neg}
+        data.append(neg_dict)
 
 
-    neutral = [item['roberta_nue'] for item in results]
-    total_neu = sum(neutral)
-    average_neu = (total_neu/ len(neutral)) * 100
-    neu_dict = {'Category': 'neutral', 'Value': average_neu}
-    data.append(neu_dict)
+        neutral = [item['roberta_nue'] for item in results]
+        total_neu = sum(neutral)
+        average_neu = (total_neu/ len(neutral)) * 100
+        neu_dict = {'Category': 'neutral', 'Value': average_neu}
+        data.append(neu_dict)
 
-    positive = [item['roberta_pos'] for item in results]
-    total_pos = sum(positive)
-    average_pos = (total_pos/ len(positive)) * 100
-    print(average_pos)
-    pos_dict = {'Category': 'Positive', 'Value': average_pos}
-    data.append(pos_dict)
+        positive = [item['roberta_pos'] for item in results]
+        total_pos = sum(positive)
+        average_pos = (total_pos/ len(positive)) * 100
+        print(average_pos)
+        pos_dict = {'Category': 'Positive', 'Value': average_pos}
+        data.append(pos_dict)
 
-    print(data)
-    categories = [item['Category'] for item in data]
-    values = [item['Value'] for item in data]
+        print(data)
+        categories = [item['Category'] for item in data]
+        values = [item['Value'] for item in data]
 
-    total = average_neg + average_neu + average_pos
-    print(total)
-    plt.bar(categories, values)
-    plt.xlabel('Sentiment')
-    plt.ylabel('Percent')
-    plt.title('Example')
-    plt.show()
-
-perform_analysis()
-
+        total = average_neg + average_neu + average_pos
+        print(total)
+    except Exception as e:
+        print(e)
+    print('create_average finished')
+    return categories, values
 
 

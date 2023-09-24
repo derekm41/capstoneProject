@@ -61,7 +61,7 @@ def create_average():
         neutral = [item['roberta_nue'] for item in results]
         total_neu = sum(neutral)
         average_neu = (total_neu/ len(neutral)) * 100
-        neu_dict = {'Category': 'neutral', 'Value': average_neu}
+        neu_dict = {'Category': 'Neutral', 'Value': average_neu}
         data.append(neu_dict)
 
         positive = [item['roberta_pos'] for item in results]

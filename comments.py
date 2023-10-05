@@ -7,11 +7,17 @@ from urlextract import URLExtract
 import html
 from bs4 import BeautifulSoup
 import demoji
+import sentiment_analysis
 
 #global variables
 comment_list = []
+video_comments_list = []
 video_id_list = []
-#query = 'crypto'
+likes = []
+comments = []
+sentiment_score = []
+# query = 'golfing'
+
 # Connect to the YouTube API
 youtube = build('youtube', 'v3', developerKey=credentials.capstone_API_Key)
 
@@ -29,40 +35,58 @@ def data_cleaning(text):
     text = demoji.replace(text, '')
     return text
 
-#Function to perform a search and retrieve top 5 - 10 video Ids returned.
-
-#   I NEED TO MAKE SURE I'M CAPTURING ALL COMMENTS FOR ACCURATE DATA
-def get_video_ids(youtube, query):
+#Function to perform a search and retrieve top 100 video Ids returned.
+def get_video_ids(youtube, query, max_results=100):
     print('getting video search results')
-    print(query)
+    
+    next_page_token = None
 
-    #Use YouTube .search() to search for top 5 videos returned, given a specific query (q)
-    search_response = youtube.search().list(
-        q=query,
-        type='video',
-        part='id',
-        maxResults=3
-    )
-    response = search_response.execute()
+    while True:
+        #Use YouTube .search() to search for top 100 videos returned, given a specific query (q)
+        search_response = youtube.search().list(
+            q=query,
+            type='video',
+            part='id',
+            maxResults=min(50, max_results - len(video_id_list)),
+            pageToken=next_page_token
+        )
+        response = search_response.execute()
 
-    # Extract the videoId from the returned object.
-    for item in response['items']:
-        video_id = item['id']['videoId']
-        # print(video_id)
-        video_id_list.append(video_id)
-    print(video_id_list)
+        # Extract the videoId from the returned object.
+        for item in response['items']:
+            video_id = item['id']['videoId']
+            # print(video_id)
+            video_id_list.append(video_id)
+        # print(video_id_list)
+        if 'nextPageToken' in response:
+            next_page_token = response['nextPageToken']
+        else:
+            break
+
+        if len(video_id_list) >= max_results:
+            break
 
     return video_id_list
 
 #Function to retrieve the comments given a video Id
 def get_video_comments(youtube, vidId, token=''):
     print('Getting comments for videoId', vidId)
+    global video_comments_list
 
+    #check if video_comments_list has anything in it so we can clear it before 
+    #doing analysis on the other comments.
+    if video_comments_list:
+        video_comments_list = []
+
+    #Call get_video_performance() for like and comment count retrieval
+    get_video_performance(vidId)
+
+    #Retrieve the comments
     try:
         request = youtube.commentThreads().list(
             part='snippet',
             videoId=vidId,
-            maxResults=3,
+            maxResults=5,
             pageToken=token
         )
         response = request.execute()
@@ -74,22 +98,55 @@ def get_video_comments(youtube, vidId, token=''):
             Ttext = html.unescape(Ttext)
             #data cleaning
             Ttext = data_cleaning(Ttext)
-            # What information from the comment do I need in the list. Possibly just the text.
-            #Maybe it makes sense to store the comment in a dictionary so we can search for comment per video id.
+            #Add comment text to combined comment list.
             comment_list.append([Ttext])
-
+            #Add comment to comment sublist per video
+            video_comments_list.append([Ttext])
+            print(Ttext)
 
     except HttpError as e:
         error_response = e.content.decode('utf-8')
         error_message = e._get_reason()
         if "commentsDisabled" in error_response:
             print('Comments are disabled for this video.')
+            video_comments_list.append('Comments Disabled')
+
+    #Call perform_analysis() to execute the analysis for comments associated with each video.
+    sentiment_analysis.perform_analysis(video_comments_list)
+
+    #Update the sentiment scores.
+    sentiment_score.append(sentiment_analysis.sentiment_distribution)
+    #Clear sentiment_distribution to prevent stacking
+    sentiment_analysis.sentiment_distribution = 0.0
     
-#Function to retrieve comments for each video id provided.
+#Function to retrieve the amount of likes on each video by id.
+def get_video_performance(vid_Id):
+
+    #Make api call for video data
+    request = youtube.videos().list(part='statistics', id=vid_Id)
+    response = request.execute()
+
+    #Get like count
+    try:
+        like_count = response['items'][0]['statistics']['likeCount']
+        likes.append(int(like_count))
+    except KeyError as e:
+        like_count = 1
+        likes.append(like_count)
+
+    #Get comment count
+    try:
+        #Get comment count
+        comment_count = response['items'][0]['statistics']['commentCount']
+        comments.append(int(comment_count))
+    except KeyError as e:
+        comment_count = 1
+        comments.append(comment_count)
+
+#Function to initiate the retrieval of comments for all the video ids in list
 def get_comments_per_vid_id(vidIdsList):
     for vid_id in vidIdsList:
         get_video_comments(youtube, vid_id)
-
 
 #Function to create a csv file with the retrieved text data.
 def generate_csv():
@@ -107,7 +164,8 @@ def generate_csv():
 
 
 # Call the functions
-# get_comments_per_vid_id(get_video_ids(youtube))
+# get_video_ids(youtube, query)
+# get_comments_per_vid_id(get_video_ids(youtube, query))
 # check_comment_csv()
 # generate_csv()
 

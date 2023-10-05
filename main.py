@@ -92,9 +92,6 @@ def main():
         scatter_ax.set_ylabel('Comments')
         scatter_ax.set_title('Scatter Plot of Likes vs. Comments with Sentiment Scores')
 
-        print('max likes', max(comments.likes))
-        print('average', sum(comments.likes)/len(comments.likes))
-
         scatter_ax.set_xlim(0, 10000)
         scatter_ax.set_ylim(0, 2000)
 
@@ -114,7 +111,6 @@ def main():
         bin_edges = np.linspace(0, 1.0, num_bins + 1)
         histo_fig = plt.figure(figsize=(4.5, 4.5))
         histo_ax = histo_fig.add_subplot(111)
-        print(f'negative scores: {sentiment_analysis.negative_scores}')
         histo_ax.hist(sentiment_analysis.negative_scores, bins=bin_edges, edgecolor='black')
         histo_ax.set_xlabel('Negative Sentiment Scores')
         histo_ax.set_ylabel('Frequency')

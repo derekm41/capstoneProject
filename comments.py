@@ -55,9 +55,8 @@ def get_video_ids(youtube, query, max_results=100):
         # Extract the videoId from the returned object.
         for item in response['items']:
             video_id = item['id']['videoId']
-            # print(video_id)
             video_id_list.append(video_id)
-        # print(video_id_list)
+            
         if 'nextPageToken' in response:
             next_page_token = response['nextPageToken']
         else:
@@ -102,7 +101,6 @@ def get_video_comments(youtube, vidId, token=''):
             comment_list.append([Ttext])
             #Add comment to comment sublist per video
             video_comments_list.append([Ttext])
-            print(Ttext)
 
     except HttpError as e:
         error_response = e.content.decode('utf-8')

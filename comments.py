@@ -8,8 +8,13 @@ import html
 from bs4 import BeautifulSoup
 import demoji
 import sentiment_analysis
+import random
 
 #global variables
+ #Random number for accuracy testing.
+random_number1 = random.randint(1, 25)
+random_number2 = random. randint(26, 50)
+video_counter = 0
 comment_list = []
 video_comments_list = []
 video_id_list = []
@@ -69,7 +74,10 @@ def get_video_ids(youtube, query, max_results=100):
 
 #Function to retrieve the comments given a video Id
 def get_video_comments(youtube, vidId, token=''):
+    global video_counter
+
     print('Getting comments for videoId', vidId)
+    video_counter += 1
     global video_comments_list
 
     #check if video_comments_list has anything in it so we can clear it before 
@@ -101,6 +109,10 @@ def get_video_comments(youtube, vidId, token=''):
             comment_list.append([Ttext])
             #Add comment to comment sublist per video
             video_comments_list.append([Ttext])
+        #Export to csv for manual accuracy testing.
+        if video_counter == random_number1 or video_counter == random_number2 :
+            sentiment_analysis.perform_analysis(video_comments_list, True)
+        else: sentiment_analysis.perform_analysis(video_comments_list, False)     
 
     except HttpError as e:
         error_response = e.content.decode('utf-8')
@@ -109,8 +121,6 @@ def get_video_comments(youtube, vidId, token=''):
             print('Comments are disabled for this video.')
             video_comments_list.append('Comments Disabled')
 
-    #Call perform_analysis() to execute the analysis for comments associated with each video.
-    sentiment_analysis.perform_analysis(video_comments_list)
 
     #Update the sentiment scores.
     sentiment_score.append(sentiment_analysis.sentiment_distribution)
@@ -147,19 +157,21 @@ def get_comments_per_vid_id(vidIdsList):
         get_video_comments(youtube, vid_id)
 
 #Function to create a csv file with the retrieved text data.
-def generate_csv():
+def generate_csv(videos_comments):
     print('Generating new csv file')
     file_path = 'D:\capstoneProject\comments.csv'
     if os.path.isfile(file_path):
         os.remove(file_path)
 
     with open('comments.csv', 'w', newline='', encoding='utf-8-sig') as csvfile:
-        thewriter = csv.writer(csvfile)
+        fieldnames = ['Comment', 'Sentiment']
+        thewriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        thewriter.writeheader()
 
-        for comment in comment_list:
-            text = comment
-            thewriter.writerow(text)
-
+        for data in videos_comments:
+            sentiment_dict = eval(data['Sentiment'])
+            data['Sentiment'] = sentiment_dict
+            thewriter.writerow(data)
 
 # Call the functions
 # get_video_ids(youtube, query)

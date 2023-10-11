@@ -27,8 +27,9 @@ def main():
         comments.get_comments_per_vid_id(comments.video_id_list)
         process_data(38)
         process_data(60)
-        sentiment_analysis.perform_analysis(comments.comment_list) 
+        sentiment_analysis.perform_analysis(comments.comment_list, False) 
         process_data(80)
+        comments.generate_csv(sentiment_analysis.testing_list)
         categories, values = sentiment_analysis.create_average()
         process_data(90)
         create_matplotlib_widget(categories, values)
@@ -101,7 +102,7 @@ def main():
         scatter_canvas = FigureCanvasTkAgg(scatter_fig, scatter_frame)
         scatter_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        scatter_definition = """This scatter is used to show the relationship between numbers of comments, likes, and positive/negative sentiment distribution on videos. The Y axis represents comment count. The X axis represents like count. The intensity of the dot represents sentiment scoring. The darker the red, the more positive the sentiment."""
+        scatter_definition = """This scatter is used to show the relationship between numbers of comments, likes, and positive/negative sentiment distribution on videos. The Y axis represents comment count. The X axis represents like count. The intensity of the dot represents sentiment scoring. The sentiment shade ranges from 0.0 to 2.0. 0.0 representing highly negative, and 2.0 representing highly positive. The darker the red, the more positive the sentiment."""
         scatter_text_widget = tk.Text(scatter_def_frame, wrap='word', width=100, height=100)
         scatter_text_widget.insert('1.0', scatter_definition)
         scatter_text_widget.pack(side="bottom")

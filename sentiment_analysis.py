@@ -1,11 +1,6 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from transformers import pipeline
 from transformers import AutoTokenizer
 from transformers import AutoModelForSequenceClassification
 from scipy.special import softmax
-import csv
 
 #HuggingFace Roberta
 MODEL = f"cardiffnlp/twitter-roberta-base-sentiment"
@@ -21,9 +16,10 @@ pos_scores_total = 0.0
 total_neg = 0
 total_pos = 0
 sentiment_distribution = 0.0
+testing_list = []
 
 #Function to start the analysis
-def perform_analysis(comment_list):
+def perform_analysis(comment_list, test):
     global sentiment_distribution
     global pos_scores_total
     global neg_scores_total
@@ -34,7 +30,7 @@ def perform_analysis(comment_list):
         neg_scores_total = 0.0
 
     for comment in comment_list:
-        results.append(polarity_scores_roberta(comment))
+        results.append(polarity_scores_roberta(comment, test))
 
     try:
         sentiment_distribution = pos_scores_total/neg_scores_total
@@ -43,9 +39,10 @@ def perform_analysis(comment_list):
         print(e)
 
 #Function performs analysis against Roberta model
-def polarity_scores_roberta(comment):
+def polarity_scores_roberta(comment, test):
     global neg_scores_total
     global pos_scores_total
+    global testing_list
 
     #Limit length to prevent tensor overflow
     max_text_length = 505
@@ -80,7 +77,15 @@ def polarity_scores_roberta(comment):
             'neutral_score' : scores[1],
             'positive_score' : scores[2]
         }
-        
+        if test == True:
+            if isinstance(comment, list):
+                comment = " ".join(comment)
+            comment_scores_dict = {
+                'Comment': comment,
+                'Sentiment': str(scores_dict)
+            }
+            testing_list.append(comment_scores_dict)
+            
     except RuntimeError as e:
             #Handle an over tensor limit problem
             print('tensor problem')
